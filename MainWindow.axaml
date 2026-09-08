@@ -5,5 +5,26 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="ChatProject.MainWindow"
         Title="ChatProject">
-    Welcome to Avalonia!
+    <Grid ShowGridLines="False">
+        <!-- кількість стовбців(при потребі кількість можна змінити) -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        
+        <!-- кількість рядків(при потребі кількість можна змінити) -->
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            
+            <RowDefinition />
+        </Grid.RowDefinitions>
+       
+    </Grid>
 </Window>
