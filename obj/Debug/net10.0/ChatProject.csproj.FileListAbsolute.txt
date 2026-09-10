@@ -193,3 +193,6 @@
 /home/anton/RiderProjects/ChatProject/ChatProject/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /home/anton/RiderProjects/ChatProject/ChatProject/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 /home/anton/RiderProjects/ChatProject/ChatProject/bin/Debug/net10.0/appsettings.json
+/home/anton/RiderProjects/ChatProject/ChatProject/bin/Debug/net10.0/DialogHost.Avalonia.dll
+/home/anton/RiderProjects/ChatProject/ChatProject/bin/Debug/net10.0/MsBox.Avalonia.dll
+/home/anton/RiderProjects/ChatProject/ChatProject/bin/Debug/net10.0/BCrypt-Net-Next.dll

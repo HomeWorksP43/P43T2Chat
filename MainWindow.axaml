@@ -23,12 +23,12 @@
 
                 <Grid.RowDefinitions>
                     
-                    <RowDefinition Height="45"/>
+                    <RowDefinition Height="50"/>
                     <RowDefinition Height="60"/>
-                    <RowDefinition Height="45"/>
-                    <RowDefinition Height="45"/>
-                    <RowDefinition Height="45"/>
-                    <RowDefinition Height="45"/>
+                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="50"/>
                     <RowDefinition Height="65"/>
                     <RowDefinition Height="65"/>
                 </Grid.RowDefinitions>
@@ -99,6 +99,8 @@
                         Foreground="White"
                         CornerRadius="10"
                         HorizontalAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        Click="SignInButton_Click"
                         VerticalAlignment="Bottom"/>
                 
                 
@@ -123,7 +125,6 @@
                          BorderThickness="0"
                          CornerRadius="8"
                          IsVisible="False"
-                         
                          Padding="10"/>
 
                 <TextBox x:Name="PasswordTextBoxSignUp"
@@ -149,7 +150,7 @@
                         Foreground="White"
                         CornerRadius="10"
                         HorizontalAlignment="Center"
-                        Click="SignUp"
+                        Click="SignUpButton_Click"
                         IsVisible="False"
                         VerticalAlignment="Bottom"/>
 
