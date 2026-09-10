@@ -37,5 +37,8 @@ public partial class MainWindow : Window
         SwitchForms();
     }
 
-    
+    private void SignUp(object? sender, RoutedEventArgs e)
+    {
+        var context = 
+    }
 }
