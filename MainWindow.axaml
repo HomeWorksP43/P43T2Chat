@@ -9,7 +9,7 @@
         Title="Sender"
         Background="Black">
 
-    <Grid Background="Black">
+    <Grid Background="Black" >
 
         <Border Width="430"
                 Height="360"
@@ -19,14 +19,17 @@
                 VerticalAlignment="Center">
 
 
-            <Grid Margin="45,25">
+            <Grid Margin="45,25" >
 
                 <Grid.RowDefinitions>
+                    
+                    <RowDefinition Height="45"/>
                     <RowDefinition Height="60"/>
                     <RowDefinition Height="45"/>
                     <RowDefinition Height="45"/>
                     <RowDefinition Height="45"/>
                     <RowDefinition Height="45"/>
+                    <RowDefinition Height="65"/>
                     <RowDefinition Height="65"/>
                 </Grid.RowDefinitions>
 
@@ -50,6 +53,8 @@
                             Height="32"
                             Background="#777777"
                             Foreground="White"
+                            IsEnabled="False"
+                            Click="SignInNavigate_click"
                             CornerRadius="8"/>
 
                     <Button x:Name="SignUpNavigationButton"
@@ -58,35 +63,26 @@
                             Height="32"
                             Background="#777777"
                             Foreground="White"
+                            Click="SignUpNavigate_click"
                             CornerRadius="8"/>
                 </StackPanel>
-
-                <TextBlock x:Name="EmailTextBlock"
-                           Grid.Row="2"
-                           Text="email"
-                           FontSize="14"
-                           Foreground="#BBBBBB"
-                           VerticalAlignment="Center"/>
-
+                
+              
                 <TextBox x:Name="EmailTextBox"
                          Grid.Row="3"
                          Height="35"
+                         PlaceholderText="Email"
                          Background="#777777"
                          Foreground="White"
                          BorderThickness="0"
                          CornerRadius="8"
                          Padding="10"/>
-
-                <TextBlock x:Name="PasswordTextBlock"
-                           Grid.Row="4"
-                           Text="password"
-                           FontSize="14"
-                           Foreground="#BBBBBB"
-                           VerticalAlignment="Center"/>
+                
 
                 <TextBox x:Name="PasswordTextBox"
                          Grid.Row="5"
                          Height="35"
+                         PlaceholderText="Password"
                          Background="#777777"
                          Foreground="White"
                          BorderThickness="0"
@@ -103,6 +99,58 @@
                         Foreground="White"
                         CornerRadius="10"
                         HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"/>
+                
+                
+                
+                <TextBox x:Name="UsernameTextBox"
+                         Grid.Row="3"
+                         Height="35"
+                         PlaceholderText="Username"
+                         Background="#777777"
+                         Foreground="White"
+                         BorderThickness="0"
+                         CornerRadius="8"
+                         IsVisible="False"
+                         Padding="10"/>
+                
+                <TextBox x:Name="EmailTextBoxSignUp"
+                         Grid.Row="4"
+                         Height="35"
+                         PlaceholderText="Email"
+                         Background="#777777"
+                         Foreground="White"
+                         BorderThickness="0"
+                         CornerRadius="8"
+                         IsVisible="False"
+                         
+                         Padding="10"/>
+
+                <TextBox x:Name="PasswordTextBoxSignUp"
+                         Grid.Row="5"
+                         Height="35"
+                         PlaceholderText="Password"
+                         Background="#777777"
+                         Foreground="White"
+                         BorderThickness="0"
+                         CornerRadius="8"
+                         
+                         IsVisible="False"
+                         Padding="10"/>
+
+            
+                <Button x:Name="SignUnButton"
+                        Grid.Row="6"
+                        HorizontalContentAlignment="Center"
+                        Content="sign up"
+                        Width="180"
+                        Height="40"
+                        Background="#777777"
+                        Foreground="White"
+                        CornerRadius="10"
+                        HorizontalAlignment="Center"
+                        Click="SignUp"
+                        IsVisible="False"
                         VerticalAlignment="Bottom"/>
 
             </Grid>
