@@ -1,4 +1,6 @@
 using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -120,6 +122,8 @@ public partial class MainWindow : Window
             await box.ShowAsync();
             return;
         }
+        TcpClient  client = new TcpClient(IPAddress.Loopback.ToString(),5000);
+        
         HideAuth();
     }
 
