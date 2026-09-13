@@ -19,13 +19,24 @@ public partial class MainWindow : Window
 {
     private readonly ChatClient _client = new();
     private string? _activeChat;
+    private int _activeGroupId;
+    private bool _activeChatIsGroup;
+    private ChatViewMode _viewMode = ChatViewMode.Contacts;
     private int _currentUserId;
     private string _username = "";
+
+    private enum ChatViewMode
+    {
+        Contacts,
+        BlackList,
+        Groups
+    }
 
     public MainWindow()
     {
         InitializeComponent();
         _client.MessageReceived += OnMessageReceived;
+        _client.GroupMessageReceived += OnGroupMessageReceived;
 
         ContactsBorder.PropertyChanged += (_, e) =>
         {
@@ -61,16 +72,17 @@ public partial class MainWindow : Window
         SignUnButton.IsVisible = !SignUnButton.IsVisible;
     }
 
-    private void SwitchChatMode()
+    private void SetViewMode(ChatViewMode mode)
     {
-        ContactsNavigationButton.IsEnabled = !ContactsNavigationButton.IsEnabled;
-        BlackListNavigationButton.IsEnabled = !BlackListNavigationButton.IsEnabled;
-        NewContactTextBox.IsVisible = !NewContactTextBox.IsVisible;
-        AddContactButton.IsVisible = !AddContactButton.IsVisible;
-        ContactsList.IsVisible = !ContactsList.IsVisible;
-        NewBlackListContactContactTextBox.IsVisible = !NewBlackListContactContactTextBox.IsVisible;
-        AddContactBlackListButton.IsVisible = !AddContactBlackListButton.IsVisible;
+        _viewMode = mode;
 
+        ContactsNavigationButton.IsEnabled = mode != ChatViewMode.Contacts;
+        BlackListNavigationButton.IsEnabled = mode != ChatViewMode.BlackList;
+        GroupsNavigationButton.IsEnabled = mode != ChatViewMode.Groups;
+
+        ContactsModePanel.IsVisible = mode == ChatViewMode.Contacts;
+        BlackListModePanel.IsVisible = mode == ChatViewMode.BlackList;
+        GroupsModePanel.IsVisible = mode == ChatViewMode.Groups;
     }
 
     private void HideAuth()
@@ -90,8 +102,8 @@ public partial class MainWindow : Window
         ContactsBorder.IsVisible = true;
         BlackListNavigationButton.IsVisible = true;
         ContactsNavigationButton.IsVisible = true;
-        NewContactTextBox.IsVisible = true;
-        AddContactButton.IsVisible = true;
+        GroupsNavigationButton.IsVisible = true;
+        SetViewMode(ChatViewMode.Contacts);
     }
 
     private void SignUpNavigate_click(object? sender, RoutedEventArgs e)
@@ -198,6 +210,7 @@ public partial class MainWindow : Window
 
         Console.WriteLine("[diag] EnterChatAsync: HideAuth()");
         await GetAllContacts();
+        await LoadGroupsAsync();
         Console.WriteLine("[diag] GetAllContacts done");
 
         var (host, port) = GetServerEndpoint();
@@ -271,19 +284,27 @@ public partial class MainWindow : Window
         await GetAllContacts();
     }
 
-    private async Task LoadHistoryAsync(string contactName)
+    private async Task LoadHistoryAsync(string chatName)
     {
         using var context = new AppContext();
 
-        IList<Message> chatMessages = await context.Messages
-            .Include(m => m.Sender)
-            .Include(m => m.Receiver)
-            .Where(m =>
-                (m.Sender.Username == _username && m.Receiver.Username == contactName) ||
-                (m.Sender.Username == contactName && m.Receiver.Username == _username))
-            .OrderBy(m => m.SendAt)
-            .ToListAsync();
-        Console.WriteLine(chatMessages.Count);
+        IList<Message> chatMessages;
+        if (_activeChatIsGroup)
+        {
+            chatMessages = await GroupService.GetGroupHistoryAsync(_activeGroupId);
+        }
+        else
+        {
+            chatMessages = await context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.Receiver)
+                .Where(m =>
+                    (m.Sender.Username == _username && m.Receiver!.Username == chatName) ||
+                    (m.Sender.Username == chatName && m.Receiver!.Username == _username))
+                .OrderBy(m => m.SendAt)
+                .ToListAsync();
+        }
+
         MessagesList.Items.Clear();
         foreach (var message in chatMessages)
             MessagesList.Items.Add($"{message.Sender.Username}: {message.Text}");
@@ -292,8 +313,72 @@ public partial class MainWindow : Window
     private void SelectContact(string contactName)
     {
         _activeChat = contactName;
+        _activeGroupId = 0;
+        _activeChatIsGroup = false;
         ChatPanel.IsVisible = true;
+        AddGroupMemberTextBox.IsVisible = false;
+        AddGroupMemberButton.IsVisible = false;
         _ = LoadHistoryAsync(contactName);
+    }
+
+    private void SelectGroup(int groupId, string groupName)
+    {
+        _activeChat = groupName;
+        _activeGroupId = groupId;
+        _activeChatIsGroup = true;
+        ChatPanel.IsVisible = true;
+        AddGroupMemberTextBox.IsVisible = true;
+        AddGroupMemberButton.IsVisible = true;
+        _ = LoadHistoryAsync(groupName);
+    }
+
+    private async Task LoadGroupsAsync()
+    {
+        IList<Models.Group> groups = await GroupService.GetUserGroupsAsync(_currentUserId);
+
+        GroupsList.Children.Clear();
+        foreach (var group in groups)
+        {
+            var btn = new Button
+            {
+                Content = $"{group.Name} ({group.Members.Count})",
+                Width = 160,
+                Height = 30,
+                Margin = new Avalonia.Thickness(0, 2)
+            };
+            btn.Click += (_, _) => SelectGroup(group.Id, group.Name);
+            GroupsList.Children.Add(btn);
+        }
+    }
+
+    private async void CreateGroupButton_Click(object? sender, RoutedEventArgs e)
+    {
+        string name = CreateGroupTextBox.Text?.Trim() ?? "";
+        if (name.Equals(string.Empty))
+        {
+            await ShowErrorAsync("Group name can't be empty");
+            return;
+        }
+
+        await GroupService.CreateGroupAsync(_username, name);
+        CreateGroupTextBox.Clear();
+        await LoadGroupsAsync();
+    }
+
+    private async void AddGroupMemberButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (!_activeChatIsGroup) return;
+
+        string username = AddGroupMemberTextBox.Text?.Trim() ?? "";
+        if (username.Equals(string.Empty))
+        {
+            await ShowErrorAsync("Username can't be empty");
+            return;
+        }
+
+        await GroupService.AddMembersAsync(_activeGroupId, username);
+        AddGroupMemberTextBox.Clear();
+        await LoadGroupsAsync();
     }
 
     private async void SendButton_Click(object? sender, RoutedEventArgs e)
@@ -312,6 +397,14 @@ public partial class MainWindow : Window
         string text = MessageInput.Text ?? "";
         string to = _activeChat ?? "";
         if (text.Equals(string.Empty) || to.Equals(string.Empty)) return;
+
+        if (_activeChatIsGroup)
+        {
+            await GroupService.SendMessageAsync(_client, _activeGroupId, _currentUserId, text);
+            MessagesList.Items.Add($"{_username}: {text}");
+            MessageInput.Clear();
+            return;
+        }
 
         using var context = new AppContext();
        
@@ -353,6 +446,15 @@ public partial class MainWindow : Window
         });
     }
 
+    private void OnGroupMessageReceived(string from, string groupName, string text)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_activeChatIsGroup && groupName == _activeChat)
+                MessagesList.Items.Add($"{from}: {text}");
+        });
+    }
+
     private async Task ShowErrorAsync(string message)
     {
         var box = MessageBoxManager.GetMessageBoxStandard("Error", message, ButtonEnum.Ok);
@@ -361,12 +463,18 @@ public partial class MainWindow : Window
 
     private void BlackListNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        SwitchChatMode();
+        SetViewMode(ChatViewMode.BlackList);
     }
 
     private void ContactsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        SwitchChatMode();
+        SetViewMode(ChatViewMode.Contacts);
+    }
+
+    private void GroupsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetViewMode(ChatViewMode.Groups);
+        _ = LoadGroupsAsync();
     }
 
     private void AddContactBlackListButton_OnClick(object? sender, RoutedEventArgs e)

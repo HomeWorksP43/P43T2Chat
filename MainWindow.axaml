@@ -19,7 +19,7 @@
                 VerticalAlignment="Center">
 
 
-            <Grid Margin="45,25"  >
+            <Grid Margin="45,25"   ShowGridLines="False">
 
                 <Grid.RowDefinitions >
                     
@@ -182,8 +182,9 @@
                  
                  
                  <Button
-                     Grid.Column="0"
-                     Grid.Row="0"
+                     Grid.Column="1"
+                     Grid.Row="1"
+                     VerticalAlignment="Top"
                      HorizontalAlignment="Left"
                      Margin=" 0 0 0 40"
                      x:Name="ContactsNavigationButton"
@@ -197,29 +198,46 @@
                      Foreground="White" 
                      CornerRadius="8"/> 
                          
+<Button
+                              Grid.Column="1"
+                              Grid.Row="0"
+                              VerticalAlignment="Center"
+                              
+                              Margin=" 0 0 10 40"
+                              x:Name="BlackListNavigationButton"
+                              Click="BlackListNavigationButton_OnClick"
+                                  Content="Black list"
+                              IsVisible="False"
+                                  Width="80"
+                                  Height="32"
+                                   Background="#777777" 
+                                Foreground="White" 
+                                  CornerRadius="8"/> 
+                          
                          <Button
-                             Grid.Column="0"
-                             Grid.Row="0"
-                             HorizontalAlignment="Right"
-                             Margin=" 0 0 10 40"
-                             x:Name="BlackListNavigationButton"
-                             Click="BlackListNavigationButton_OnClick"
-                                 Content="Black list"
+                             Grid.Column="1"
+                             Grid.Row="2"
+                             HorizontalAlignment="Left"
+                             VerticalAlignment="Top"
+                             x:Name="GroupsNavigationButton"
+                             Click="GroupsNavigationButton_OnClick"
+                             Content="Groups"
                              IsVisible="False"
-                                 Width="80"
-                                 Height="32"
-                                  Background="#777777" 
-                               Foreground="White" 
-                                 CornerRadius="8"/> 
+                             IsEnabled="False"
+                             Width="80"
+                             Height="32"
+                             Background="#777777"
+                             Foreground="White"
+                             CornerRadius="8"/>
                  
                  
-<Border Grid.Column="0" Grid.Row="3"  BorderBrush="Gray"
+<Border Grid.Column="0" Grid.Row="4"  BorderBrush="Gray"
                         x:Name="ContactsBorder"
                         Margin=" 0 30 0 0"
                         BorderThickness="1"
                         CornerRadius="8"
                         Width="200"
-                        Height="350"
+                        Height="600"
                         Padding="15"
                         HorizontalAlignment="Center"
                         IsVisible="False"
@@ -227,53 +245,90 @@
                         VerticalAlignment="Center">
     <StackPanel x:Name="Contacts"
                 ScrollViewer.VerticalScrollBarVisibility="Auto">
-        <TextBox x:Name="NewContactTextBox"
-                 Height="30"
-                 PlaceholderText="username"
-                 Background="#777777"
-                 Foreground="White"
-                 BorderThickness="0"
-                 IsVisible="False"
-                 CornerRadius="8"
-                 Padding="8"/>
-        <Button x:Name="AddContactButton"
-                Content="+ add contact"
-                Height="30"
-                IsVisible="False"
-                Margin="0,4,0,8"
-                Background="#777777"
-                Foreground="White"
-                CornerRadius="8"
-                Click="AddContactButton_Click"/>
-        
-        
-        <TextBox x:Name="NewBlackListContactContactTextBox"
-                 Height="30"
-                 PlaceholderText="username for black list"
-                 Background="#777777"
-                 Foreground="White"
-                 BorderThickness="0"
-                 IsVisible="False"
-                 CornerRadius="8"
-                 Padding="8"/>
-        <Button x:Name="AddContactBlackListButton"
-                Content="+ add in black list"
-                Height="30"
-                IsVisible="False"
-                Margin="0,4,0,8"
-                Background="#777777"
-                Foreground="White"
-                CornerRadius="8"
-                Click="AddContactBlackListButton_OnClick"
-                />
+        <StackPanel x:Name="ContactsModePanel">
+            <TextBox x:Name="NewContactTextBox"
+                     Height="30"
+                     PlaceholderText="username"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="AddContactButton"
+                    Content="+ add contact"
+                    Height="30"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="AddContactButton_Click"/>
+            <StackPanel x:Name="ContactsList"/>
+        </StackPanel>
 
-        <StackPanel x:Name="ContactsList"/>
+        <StackPanel x:Name="BlackListModePanel"
+                    IsVisible="False">
+            <TextBox x:Name="NewBlackListContactContactTextBox"
+                     Height="30"
+                     PlaceholderText="username for black list"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="AddContactBlackListButton"
+                    Content="+ add in black list"
+                    Height="30"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="AddContactBlackListButton_OnClick"/>
+        </StackPanel>
+
+        <StackPanel x:Name="GroupsModePanel"
+                    IsVisible="False">
+            <TextBox x:Name="CreateGroupTextBox"
+                     Height="30"
+                     PlaceholderText="group name"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="CreateGroupButton"
+                    Content="+ create group"
+                    Height="30"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="CreateGroupButton_Click"/>
+            <TextBox x:Name="AddGroupMemberTextBox"
+                     Height="30"
+                     PlaceholderText="username for group"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     IsVisible="False"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="AddGroupMemberButton"
+                    Content="+ add member"
+                    Height="30"
+                    IsVisible="False"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="AddGroupMemberButton_Click"/>
+            <StackPanel x:Name="GroupsList"/>
+        </StackPanel>
     </StackPanel>
                 </Border>
 
                 <Border Grid.Column="1"
                         Grid.ColumnSpan="4"
-                        Grid.Row="1"
+                        Grid.Row="3"
                            Grid.RowSpan="5"
                         x:Name="ChatPanel"
                         Margin="35,30,0,0"
@@ -283,7 +338,7 @@
                         CornerRadius="8"
                         IsVisible="False"
                         Padding="10">
-                    <Grid RowDefinitions="*,Auto"
+                    <Grid RowDefinitions="*,Auto "
                           ColumnDefinitions="*,Auto">
                         <ListBox x:Name="MessagesList"
                                  

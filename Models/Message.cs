@@ -9,6 +9,10 @@ public class Message
     public User Sender { get; set; }
     public string Text {get;set;}
     public DateTime SendAt { get; set; }
-    public int ReceiverId { get; set; }
-    public User Receiver { get; set; }
+
+    public int? ReceiverId { get; set; }
+    public User? Receiver { get; set; }
+
+    public int? GroupId { get; set; }
+    public Group? Group { get; set; }
 }

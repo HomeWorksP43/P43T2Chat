@@ -12,4 +12,5 @@ public class User
     public IList<Contact> OwnContacts { get; set; }
     public IList<Contact> BlacklistedContacts { get; set; }
     public IList<Message> Messages { get; set; }
+    public IList<GroupMember> GroupMemberships { get; set; }
 }
