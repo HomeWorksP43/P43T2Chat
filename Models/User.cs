@@ -10,5 +10,6 @@ public class User
     public string Password { get; set; }
     
     public IList<Contact> OwnContacts { get; set; }
+    public IList<Contact> BlacklistedContacts { get; set; }
     public IList<Message> Messages { get; set; }
 }
