@@ -11,17 +11,17 @@
 
     <Grid Background="Black" >
 
-        <Border Width="430"
-                Height="360"
+        <Border Width="800"
+                Height="450"
                 Background="Black"
                 CornerRadius="25"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
 
 
-            <Grid Margin="45,25" >
+            <Grid Margin="45,25"   ShowGridLines="False">
 
-                <Grid.RowDefinitions>
+                <Grid.RowDefinitions >
                     
                     <RowDefinition Height="50"/>
                     <RowDefinition Height="60"/>
@@ -32,128 +32,345 @@
                     <RowDefinition Height="65"/>
                     <RowDefinition Height="65"/>
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    
+                </Grid.ColumnDefinitions>
 
-                <TextBlock x:Name="TitleTextBlock"
-                           Grid.Row="0"
-                           Text="Sender"
-                           FontSize="32"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-
-                <StackPanel Grid.Row="1"
-                            Orientation="Horizontal"
+                 <TextBlock x:Name="TitleTextBlock"
+                            Grid.Column="2"
+                            Grid.Row="1"
+                            Text="Sender"
+                            FontSize="32"
+                            FontWeight="Bold"
+                            Foreground="White"
                             HorizontalAlignment="Center"
-                            Spacing="10">
-
-                    <Button x:Name="SignInNavigationButton"
-                            Content="sign in"
-                            Width="100"
-                            Height="32"
-                            Background="#777777"
-                            Foreground="White"
-                            IsEnabled="False"
-                            Click="SignInNavigate_click"
-                            CornerRadius="8"/>
-
-                    <Button x:Name="SignUpNavigationButton"
-                            Content="sign up"
-                            Width="100"
-                            Height="32"
-                            Background="#777777"
-                            Foreground="White"
-                            Click="SignUpNavigate_click"
-                            CornerRadius="8"/>
-                </StackPanel>
-                
-              
-                <TextBox x:Name="EmailTextBox"
-                         Grid.Row="3"
-                         Height="35"
-                         PlaceholderText="Email"
+                            VerticalAlignment="Center"/>
+                 
+                 
+                 
+                     <Button Grid.Column="1" Grid.Row="2" x:Name="SignInNavigationButton"
+                             HorizontalAlignment="Right"
+                             Content="sign in"
+                             Width="80"
+                             Height="32"
+                             Background="#777777"
+                             Foreground="White"
+                             IsEnabled="False"
+                             Click="SignInNavigate_click"
+                             CornerRadius="8"/>
+                 
+                     <Button
+                         Grid.Column="3"
+                         Grid.Row="2"
+                         x:Name="SignUpNavigationButton"
+                             Content="sign up"
+                             Width="80"
+                             Height="32"
+                             Background="#777777"
+                 
+                             Foreground="White"
+                             Click="SignUpNavigate_click"
+                             CornerRadius="8"/>
+                 
+                 
+                 
+                 <TextBox x:Name="EmailTextBox"
+                          Grid.Column="2"
+                          Grid.Row="3"
+                          Height="40"
+                          PlaceholderText="Email"
+                          Background="#777777"
+                          Foreground="White"
+                          BorderThickness="0"
+                          CornerRadius="8"
+                          Width="300"
+                          Padding="10"/>
+                 
+                 
+                 <TextBox x:Name="PasswordTextBox"
+                          Grid.Column="2"
+                          Grid.Row="5"
+                 
+                          Width="300"
+                          Height="40"
+                          PlaceholderText="Password"
+                          Background="#777777"
+                          Foreground="White"
+                          BorderThickness="0"
+                          CornerRadius="8"
+                          Padding="10"/>
+                 
+                 
+                 <Button x:Name="SignInButton"
+                         Grid.Column="2"
+                         Grid.Row="6"
+                         Content="sign in"
+                         Width="180"
+                         Height="40"
                          Background="#777777"
                          Foreground="White"
-                         BorderThickness="0"
-                         CornerRadius="8"
-                         Padding="10"/>
-                
-
-                <TextBox x:Name="PasswordTextBox"
-                         Grid.Row="5"
-                         Height="35"
-                         PlaceholderText="Password"
+                         CornerRadius="10"
+                         HorizontalAlignment="Center"
+                         HorizontalContentAlignment="Center"
+                         Click="SignInButton_Click"
+                         VerticalAlignment="Bottom"/>
+                 
+                 
+                 
+                 <TextBox x:Name="UsernameTextBox"
+                          Grid.Column="2"
+                          Grid.Row="3"
+                          Width="300"
+                          Height="40"
+                          PlaceholderText="Username"
+                          Background="#777777"
+                          Foreground="White"
+                          BorderThickness="0"
+                          CornerRadius="8"
+                          IsVisible="False"
+                          Padding="10"/>
+                 
+                 <TextBox x:Name="EmailTextBoxSignUp"
+                 
+                          Grid.Column="2"
+                          Grid.Row="4"
+                          Width="300"
+                          Height="40"
+                          PlaceholderText="Email"
+                          Background="#777777"
+                          Foreground="White"
+                          BorderThickness="0"
+                          CornerRadius="8"
+                          IsVisible="False"
+                          Padding="10"/>
+                 
+                 <TextBox x:Name="PasswordTextBoxSignUp"
+                          Grid.Column="2"
+                          Grid.Row="5"
+                          Height="40"
+                          Width="300"
+                          PlaceholderText="Password"
+                          Background="#777777"
+                          Foreground="White"
+                          BorderThickness="0"
+                          CornerRadius="8"
+                 
+                          IsVisible="False"
+                          Padding="10"/>
+                 
+                 
+                 <Button x:Name="SignUnButton"
+                         Grid.Column="2"
+                         Grid.Row="6"
+                         HorizontalContentAlignment="Center"
+                         Content="sign up"
+                         Width="180"
+                         Height="40"
                          Background="#777777"
                          Foreground="White"
-                         BorderThickness="0"
-                         CornerRadius="8"
-                         Padding="10"/>
-
-            
-                <Button x:Name="SignInButton"
-                        Grid.Row="6"
-                        Content="sign in"
-                        Width="180"
-                        Height="40"
-                        Background="#777777"
-                        Foreground="White"
-                        CornerRadius="10"
-                        HorizontalAlignment="Center"
-                        HorizontalContentAlignment="Center"
-                        Click="SignInButton_Click"
-                        VerticalAlignment="Bottom"/>
-                
-                
-                
-                <TextBox x:Name="UsernameTextBox"
-                         Grid.Row="3"
-                         Height="35"
-                         PlaceholderText="Username"
-                         Background="#777777"
-                         Foreground="White"
-                         BorderThickness="0"
-                         CornerRadius="8"
+                         CornerRadius="10"
+                         HorizontalAlignment="Center"
+                         Click="SignUpButton_Click"
                          IsVisible="False"
-                         Padding="10"/>
-                
-                <TextBox x:Name="EmailTextBoxSignUp"
-                         Grid.Row="4"
-                         Height="35"
-                         PlaceholderText="Email"
-                         Background="#777777"
-                         Foreground="White"
-                         BorderThickness="0"
-                         CornerRadius="8"
-                         IsVisible="False"
-                         Padding="10"/>
+                         VerticalAlignment="Bottom"/>
 
-                <TextBox x:Name="PasswordTextBoxSignUp"
-                         Grid.Row="5"
-                         Height="35"
-                         PlaceholderText="Password"
-                         Background="#777777"
-                         Foreground="White"
-                         BorderThickness="0"
-                         CornerRadius="8"
+                 
+                 
+                 <Button
+                     Grid.Column="1"
+                     Grid.Row="1"
+                     VerticalAlignment="Top"
+                     HorizontalAlignment="Left"
+                     Margin=" 0 0 0 40"
+                     x:Name="ContactsNavigationButton"
+                     Click="ContactsNavigationButton_OnClick"
+                     Content="Contacts"
+                     IsVisible="False"
+                     IsEnabled="False"
+                     Width="80"
+                     Height="32"
+                     Background="#777777" 
+                     Foreground="White" 
+                     CornerRadius="8"/> 
                          
-                         IsVisible="False"
-                         Padding="10"/>
-
-            
-                <Button x:Name="SignUnButton"
-                        Grid.Row="6"
-                        HorizontalContentAlignment="Center"
-                        Content="sign up"
-                        Width="180"
-                        Height="40"
-                        Background="#777777"
-                        Foreground="White"
-                        CornerRadius="10"
+<Button
+                              Grid.Column="1"
+                              Grid.Row="0"
+                              VerticalAlignment="Center"
+                              
+                              Margin=" 0 0 10 40"
+                              x:Name="BlackListNavigationButton"
+                              Click="BlackListNavigationButton_OnClick"
+                                  Content="Black list"
+                              IsVisible="False"
+                                  Width="80"
+                                  Height="32"
+                                   Background="#777777" 
+                                Foreground="White" 
+                                  CornerRadius="8"/> 
+                          
+                         <Button
+                             Grid.Column="1"
+                             Grid.Row="2"
+                             HorizontalAlignment="Left"
+                             VerticalAlignment="Top"
+                             x:Name="GroupsNavigationButton"
+                             Click="GroupsNavigationButton_OnClick"
+                             Content="Groups"
+                             IsVisible="False"
+                             IsEnabled="False"
+                             Width="80"
+                             Height="32"
+                             Background="#777777"
+                             Foreground="White"
+                             CornerRadius="8"/>
+                 
+                 
+<Border Grid.Column="0" Grid.Row="4"  BorderBrush="Gray"
+                        x:Name="ContactsBorder"
+                        Margin=" 0 30 0 0"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Width="200"
+                        Height="600"
+                        Padding="15"
                         HorizontalAlignment="Center"
-                        Click="SignUpButton_Click"
                         IsVisible="False"
-                        VerticalAlignment="Bottom"/>
 
+                        VerticalAlignment="Center">
+    <StackPanel x:Name="Contacts"
+                ScrollViewer.VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="ContactsModePanel">
+            <TextBox x:Name="NewContactTextBox"
+                     Height="30"
+                     PlaceholderText="username"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="AddContactButton"
+                    Content="+ add contact"
+                    Height="30"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="AddContactButton_Click"/>
+            <StackPanel x:Name="ContactsList"/>
+        </StackPanel>
+
+        <StackPanel x:Name="BlackListModePanel"
+                    IsVisible="False">
+            <TextBox x:Name="NewBlackListContactContactTextBox"
+                     Height="30"
+                     PlaceholderText="username for black list"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="AddContactBlackListButton"
+                    Content="+ add in black list"
+                    Height="30"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="AddContactBlackListButton_OnClick"/>
+        </StackPanel>
+
+        <StackPanel x:Name="GroupsModePanel"
+                    IsVisible="False">
+            <TextBox x:Name="CreateGroupTextBox"
+                     Height="30"
+                     PlaceholderText="group name"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="CreateGroupButton"
+                    Content="+ create group"
+                    Height="30"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="CreateGroupButton_Click"/>
+            <TextBox x:Name="AddGroupMemberTextBox"
+                     Height="30"
+                     PlaceholderText="username for group"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     IsVisible="False"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="AddGroupMemberButton"
+                    Content="+ add member"
+                    Height="30"
+                    IsVisible="False"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="AddGroupMemberButton_Click"/>
+            <StackPanel x:Name="GroupsList"/>
+        </StackPanel>
+    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1"
+                        Grid.ColumnSpan="4"
+                        Grid.Row="3"
+                           Grid.RowSpan="5"
+                        x:Name="ChatPanel"
+                        Margin="35,30,0,0"
+                        BorderBrush="Gray"
+                        BorderThickness="1"
+                        Height="340"
+                        CornerRadius="8"
+                        IsVisible="False"
+                        Padding="10">
+                    <Grid RowDefinitions="*,Auto "
+                          ColumnDefinitions="*,Auto">
+                        <ListBox x:Name="MessagesList"
+                                 
+                                 Grid.Row="0"
+                                 Grid.Column="0"
+                                 Grid.ColumnSpan="2"
+                                 Margin="0,0,0,8"/>
+                        <TextBox x:Name="MessageInput"
+                                 Grid.Row="1"
+                                 Grid.Column="0"
+                                 Height="50"
+                                 PlaceholderText="Message..."
+                                 Background="#777777"
+                                 Foreground="White"
+                                 BorderThickness="0"
+                                 CornerRadius="8"
+                                 Padding="10"
+                                 KeyDown="MessageInput_KeyDown"/>
+                        <Button x:Name="SendButton"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Content="Send"
+                                Width="80"
+                                Height="32"
+                                Margin="8,0,0,0"
+                                Background="#777777"
+                                Foreground="White"
+                                CornerRadius="8"
+                                Click="SendButton_Click"/>
+                    </Grid>
+                </Border>
+                
             </Grid>
         </Border>
 </Grid>
