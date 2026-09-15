@@ -24,6 +24,8 @@ public partial class MainWindow : Window
     private ChatViewMode _viewMode = ChatViewMode.Contacts;
     private int _currentUserId;
     private string _username = "";
+    private int? _editingContactId;
+    private readonly HashSet<int> _blockedContactIds = new();
 
     private enum ChatViewMode
     {
@@ -209,6 +211,7 @@ public partial class MainWindow : Window
         _activeChat = null;
 
         Console.WriteLine("[diag] EnterChatAsync: HideAuth()");
+        await GetBlacklistedContacts();
         await GetAllContacts();
         await LoadGroupsAsync();
         Console.WriteLine("[diag] GetAllContacts done");
@@ -233,7 +236,7 @@ public partial class MainWindow : Window
 
         IList<Contact> contacts = await context.Contacts
             .Include(c => c.ContactUser)
-            .Where(c => c.OwnerUserId == _currentUserId)
+            .Where(c => c.OwnerUserId == _currentUserId && !_blockedContactIds.Contains(c.Id))
             .ToListAsync();
 
         ContactsList.Children.Clear();
@@ -243,21 +246,84 @@ public partial class MainWindow : Window
                 ? contact.ContactUser?.Username ?? $"#{contact.ContactUserId}"
                 : contact.DisplayName;
 
-            var btn = new Button
-            {
-                Content = name,
-                Width = 160,
-                Height = 30,
-                Margin = new Avalonia.Thickness(0, 2)
-            };
-            btn.Click += (_, _) => SelectContact(name);
-            ContactsList.Children.Add(btn);
+            ContactsList.Children.Add(CreateContactRow(name, contact.Id, false));
         }
+    }
+
+    private Panel CreateContactRow(string name, int contactId, bool blackList)
+    {
+        var row = new Grid
+        {
+            ColumnDefinitions =
+            {
+                new ColumnDefinition(new GridLength(1, GridUnitType.Auto)),
+                new ColumnDefinition(GridLength.Auto),
+                new ColumnDefinition(GridLength.Auto)
+            },
+            Margin = new Avalonia.Thickness(0, 2)
+        };
+
+        var nameBtn = new Button
+        {
+            Content = name,
+            Width = 100,
+            Height = 30,
+            Margin = new Avalonia.Thickness(0, 0, 4, 0)
+        };
+        nameBtn.Click += (_, _) =>
+        {
+            if (!blackList)
+                SelectContact(name);
+        };
+
+        var editBtn = new Button
+        {
+            Content = "Edit",
+            Width = 42,
+            Height = 30,
+            Margin = new Avalonia.Thickness(0, 0, 4, 0)
+        };
+        editBtn.Click += async (_, _) => await StartEditContactAsync(contactId, name);
+
+        var deleteBtn = new Button
+        {
+            Content = "X",
+            Width = 30,
+            Height = 30
+        };
+        deleteBtn.Click += async (_, _) =>
+        {
+            if (blackList)
+                await UnblockUserAsync(contactId);
+            else
+                await DeleteContactAsync(contactId, name);
+        };
+
+        Grid.SetColumn(nameBtn, 0);
+        Grid.SetColumn(editBtn, 1);
+        Grid.SetColumn(deleteBtn, 2);
+
+        row.Children.Add(nameBtn);
+        if (!blackList)
+            row.Children.Add(editBtn);
+        row.Children.Add(deleteBtn);
+        return row;
     }
 
     private async void AddContactButton_Click(object? sender, RoutedEventArgs e)
     {
+        if (_editingContactId.HasValue)
+        {
+            await SaveContactEditAsync();
+            return;
+        }
+
         string target = NewContactTextBox.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(target))
+        {
+            await ShowErrorAsync("Username can't be empty");
+            return;
+        }
 
         using var context = new AppContext();
         var contactUser = await context.Users.FirstOrDefaultAsync(u => u.Username == target);
@@ -281,6 +347,81 @@ public partial class MainWindow : Window
         }
 
         NewContactTextBox.Clear();
+        await GetAllContacts();
+    }
+
+    private async Task StartEditContactAsync(int contactId, string currentName)
+    {
+        _editingContactId = contactId;
+        NewContactTextBox.Text = currentName;
+        AddContactButton.Content = "save";
+        await Task.CompletedTask;
+    }
+
+    private async Task SaveContactEditAsync()
+    {
+        if (_editingContactId == null) return;
+
+        int contactId = _editingContactId.Value;
+        string newName = NewContactTextBox.Text?.Trim() ?? "";
+
+        using (var context = new AppContext())
+        {
+            Contact? contact = await context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
+            if (contact == null)
+            {
+                await ShowErrorAsync("Contact not found");
+                await ResetContactEditModeAsync();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(newName))
+            {
+                await ShowErrorAsync("Name can't be empty");
+                return;
+            }
+
+            contact.DisplayName = newName;
+            await context.SaveChangesAsync();
+        }
+
+        await ResetContactEditModeAsync();
+        await GetAllContacts();
+    }
+
+    private async Task ResetContactEditModeAsync()
+    {
+        _editingContactId = null;
+        AddContactButton.Content = "+ add contact";
+        NewContactTextBox.Clear();
+        await Task.CompletedTask;
+    }
+
+    private async Task DeleteContactAsync(int contactId, string contactName)
+    {
+        var box = MessageBoxManager.GetMessageBoxStandard(
+            "Delete contact",
+            $"Delete '{contactName}'?",
+            ButtonEnum.YesNo);
+        var result = await box.ShowAsync();
+        if (result != ButtonResult.Yes) return;
+
+        using (var context = new AppContext())
+        {
+            Contact? contact = await context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
+            if (contact != null)
+            {
+                context.Contacts.Remove(contact);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        if (_activeChat == contactName)
+        {
+            _activeChat = null;
+            ChatPanel.IsVisible = false;
+        }
+
         await GetAllContacts();
     }
 
@@ -464,11 +605,13 @@ public partial class MainWindow : Window
     private void BlackListNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
         SetViewMode(ChatViewMode.BlackList);
+        _ = GetBlacklistedContacts();
     }
 
     private void ContactsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
     {
         SetViewMode(ChatViewMode.Contacts);
+        _ = GetAllContacts();
     }
 
     private void GroupsNavigationButton_OnClick(object? sender, RoutedEventArgs e)
@@ -484,13 +627,20 @@ public partial class MainWindow : Window
         _ = BlockUserAsync(NewBlackListContactContactTextBox.Text);
     }
 
-    private async Task BlockUserAsync(string username)
+    private async Task BlockUserAsync(string? username)
     {
+        if (string.IsNullOrEmpty(username))
+        {
+            await ShowErrorAsync("Username can't be empty");
+            return;
+        }
+
         using var context = new AppContext();
 
-        var userForBlock = await context.Contacts
-            .FirstOrDefaultAsync(c => c.DisplayName == username && c.OwnerUserId == _currentUserId);
-        if (userForBlock == null)
+        var userForBlock = await context.Users
+            .FirstOrDefaultAsync(u => u.Username == username);
+
+        if (userForBlock == null || userForBlock.Id == _currentUserId)
         {
             await ShowErrorAsync("User not found");
             return;
@@ -498,14 +648,75 @@ public partial class MainWindow : Window
 
         var currentUser = await context.Users
             .Include(u => u.BlacklistedContacts)
-            .FirstOrDefaultAsync(u => u.Username == _username);
-        bool alreadyBlocked = currentUser.BlacklistedContacts.Any(u => u.Id == userForBlock.Id);
-        if (!alreadyBlocked)
+            .FirstOrDefaultAsync(u => u.Id == _currentUserId);
+
+        var contactLink = await context.Contacts
+            .FirstOrDefaultAsync(c => c.OwnerUserId == _currentUserId && c.ContactUserId == userForBlock.Id);
+
+        if (contactLink == null)
         {
-            currentUser.BlacklistedContacts.Add(userForBlock);
+            contactLink = new Contact
+            {
+                OwnerUserId = _currentUserId,
+                ContactUserId = userForBlock.Id,
+                DisplayName = userForBlock.Username
+            };
+            context.Contacts.Add(contactLink);
+        }
+
+        if (currentUser != null && !currentUser.BlacklistedContacts.Any(c => c.Id == contactLink.Id))
+        {
+            currentUser.BlacklistedContacts.Add(contactLink);
+        }
+
+        await context.SaveChangesAsync();
+        _blockedContactIds.Clear();
+        await GetBlacklistedContacts();
+        await GetAllContacts();
+    }
+
+    private async Task GetBlacklistedContacts()
+    {
+        using var context = new AppContext();
+
+        var currentUser = await context.Users
+            .Include(u => u.BlacklistedContacts)
+            .ThenInclude(c => c.ContactUser)
+            .FirstOrDefaultAsync(u => u.Id == _currentUserId);
+
+        IList<Contact> blocked = currentUser?.BlacklistedContacts ?? new List<Contact>();
+        _blockedContactIds.Clear();
+        foreach (var contact in blocked)
+            _blockedContactIds.Add(contact.Id);
+
+        BlackListContactsList.Children.Clear();
+        foreach (var contact in blocked)
+        {
+            string name = string.IsNullOrEmpty(contact.DisplayName)
+                ? contact.ContactUser?.Username ?? $"#{contact.ContactUserId}"
+                : contact.DisplayName;
+
+            BlackListContactsList.Children.Add(CreateContactRow(name, contact.Id, true));
+        }
+    }
+
+    private async Task UnblockUserAsync(int contactId)
+    {
+        using var context = new AppContext();
+
+        var currentUser = await context.Users
+            .Include(u => u.BlacklistedContacts)
+            .FirstOrDefaultAsync(u => u.Id == _currentUserId);
+
+        Contact? blocked = currentUser?.BlacklistedContacts
+            .FirstOrDefault(c => c.Id == contactId);
+
+        if (currentUser != null && blocked != null)
+        {
+            currentUser.BlacklistedContacts.Remove(blocked);
             await context.SaveChangesAsync();
         }
-        await context.SaveChangesAsync();
 
+        await GetBlacklistedContacts();
     }
 }
