@@ -27,6 +27,43 @@ public static class ChatServer
         }
     }
 
+    private static async Task NotifyContactsStatusChangedAsync(
+        string username,
+        bool online,
+        Dictionary<string, StreamWriter> users)
+    {
+        try
+        {
+            using var context = new AppContext();
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+            if (user is null) return;
+
+            var contacts = await context.Contacts
+                .Include(c => c.ContactUser)
+                .Where(c => c.OwnerUserId == user.Id)
+                .ToListAsync();
+
+            var message = JsonSerializer.Serialize(new
+            {
+                type = "UserStatus",
+                username,
+                status = online ? "online" : "offline"
+            });
+
+            foreach (var contact in contacts)
+            {
+                var contactName = contact.ContactUser?.Username;
+                if (contactName is null) continue;
+                if (users.TryGetValue(contactName, out var dst))
+                    await dst.WriteLineAsync(message);
+            }
+        }
+        catch
+        {
+        }
+    }
+
     private static async Task HandleGroupMessageAsync(JsonElement root, Dictionary<string, StreamWriter> users)
     {
         if (!root.TryGetProperty("groupId", out var groupIdProp) ||
@@ -67,6 +104,7 @@ public static class ChatServer
     {
         var reader = new StreamReader(tcp.GetStream());
         var writer = new StreamWriter(tcp.GetStream()) { AutoFlush = true };
+        string? username = null;
 
         try
         {
@@ -74,8 +112,10 @@ public static class ChatServer
             if (authLine is null) return;
 
             using var auth = JsonDocument.Parse(authLine);
-            var name = auth.RootElement.GetProperty("name").GetString()!;
-            users[name] = writer;
+            username = auth.RootElement.GetProperty("name").GetString()!;
+            users[username] = writer;
+
+            await NotifyContactsStatusChangedAsync(username, true, users);
 
             while (await reader.ReadLineAsync() is { } line)
             {
@@ -100,10 +140,15 @@ public static class ChatServer
         }
         catch
         {
-           
+
         }
         finally
         {
+            if (username is not null)
+            {
+                users.Remove(username);
+                await NotifyContactsStatusChangedAsync(username, false, users);
+            }
             tcp.Close();
         }
     }

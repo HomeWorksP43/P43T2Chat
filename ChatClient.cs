@@ -17,6 +17,7 @@ public class ChatClient : IDisposable
 
     public event Action<string, string>? MessageReceived;
     public event Action<string, string, string>? GroupMessageReceived;
+    public event Action<string, string>? UserStatusReceived;
 
     public async Task ConnectAsync(string host, int port, string username)
     {
@@ -77,6 +78,12 @@ public class ChatClient : IDisposable
                          root.TryGetProperty("text", out text))
                 {
                     GroupMessageReceived?.Invoke(from.GetString()!, groupName.GetString()!, text.GetString()!);
+                }
+                else if (messageType == "UserStatus" &&
+                         root.TryGetProperty("username", out var statusUser) &&
+                         root.TryGetProperty("status", out var status))
+                {
+                    UserStatusReceived?.Invoke(statusUser.GetString()!, status.GetString()!);
                 }
             }
         }

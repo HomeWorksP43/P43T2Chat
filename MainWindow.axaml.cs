@@ -26,12 +26,14 @@ public partial class MainWindow : Window
     private string _username = "";
     private int? _editingContactId;
     private readonly HashSet<int> _blockedContactIds = new();
+    private List<(string Name, int ContactId)> _contactsCache = new();
 
     private enum ChatViewMode
     {
         Contacts,
         BlackList,
-        Groups
+        Groups,
+        Search
     }
 
     public MainWindow()
@@ -39,6 +41,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _client.MessageReceived += OnMessageReceived;
         _client.GroupMessageReceived += OnGroupMessageReceived;
+        _client.UserStatusReceived += OnUserStatusReceived;
 
         ContactsBorder.PropertyChanged += (_, e) =>
         {
@@ -81,10 +84,12 @@ public partial class MainWindow : Window
         ContactsNavigationButton.IsEnabled = mode != ChatViewMode.Contacts;
         BlackListNavigationButton.IsEnabled = mode != ChatViewMode.BlackList;
         GroupsNavigationButton.IsEnabled = mode != ChatViewMode.Groups;
+        SearchNavigationButton.IsEnabled = mode != ChatViewMode.Search;
 
         ContactsModePanel.IsVisible = mode == ChatViewMode.Contacts;
         BlackListModePanel.IsVisible = mode == ChatViewMode.BlackList;
         GroupsModePanel.IsVisible = mode == ChatViewMode.Groups;
+        SearchModePanel.IsVisible = mode == ChatViewMode.Search;
     }
 
     private void HideAuth()
@@ -105,6 +110,7 @@ public partial class MainWindow : Window
         BlackListNavigationButton.IsVisible = true;
         ContactsNavigationButton.IsVisible = true;
         GroupsNavigationButton.IsVisible = true;
+        SearchNavigationButton.IsVisible = true;
         SetViewMode(ChatViewMode.Contacts);
     }
 
@@ -239,14 +245,96 @@ public partial class MainWindow : Window
             .Where(c => c.OwnerUserId == _currentUserId && !_blockedContactIds.Contains(c.Id))
             .ToListAsync();
 
-        ContactsList.Children.Clear();
-        foreach (var contact in contacts)
-        {
-            string name = string.IsNullOrEmpty(contact.DisplayName)
-                ? contact.ContactUser?.Username ?? $"#{contact.ContactUserId}"
-                : contact.DisplayName;
+        _contactsCache = contacts
+            .Select(c => (
+                Name: string.IsNullOrEmpty(c.DisplayName)
+                    ? c.ContactUser?.Username ?? $"#{c.ContactUserId}"
+                    : c.DisplayName,
+                ContactId: c.Id))
+            .ToList();
 
-            ContactsList.Children.Add(CreateContactRow(name, contact.Id, false));
+        RenderContacts(ContactSearchTextBox.Text ?? "");
+    }
+
+    private void RenderContacts(string filter)
+    {
+        ContactsList.Children.Clear();
+        foreach (var (name, contactId) in _contactsCache)
+        {
+            if (!string.IsNullOrEmpty(filter) &&
+                !name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            ContactsList.Children.Add(CreateContactRow(name, contactId, false));
+        }
+    }
+
+    private void ContactSearchTextBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        RenderContacts(ContactSearchTextBox.Text ?? "");
+    }
+
+    private async void SearchMessagesButton_Click(object? sender, RoutedEventArgs e)
+    {
+        await SearchMessagesAsync();
+    }
+
+    private async Task SearchMessagesAsync()
+    {
+        string searchText = (SearchMessagesTextBox.Text ?? "").Trim();
+        if (string.IsNullOrEmpty(searchText))
+        {
+            await ShowErrorAsync("Search text can't be empty");
+            return;
+        }
+
+        string? username = (SearchUserTextBox.Text ?? "").Trim();
+        username = string.IsNullOrEmpty(username) ? null : username;
+
+        using var context = new AppContext();
+
+        IQueryable<Message> query = context.Messages
+            .Where(m => m.Text.Contains(searchText));
+
+        if (username != null)
+        {
+            User? target = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            if (target == null)
+            {
+                await ShowErrorAsync("User not found");
+                return;
+            }
+
+            query = query.Where(m =>
+                (m.SenderId == _currentUserId && m.ReceiverId == target.Id) ||
+                (m.SenderId == target.Id && m.ReceiverId == _currentUserId));
+        }
+        else
+        {
+            query = query.Where(m => m.SenderId == _currentUserId || m.ReceiverId == _currentUserId);
+        }
+
+        IList<Message> results = await query
+            .Include(m => m.Sender)
+            .Include(m => m.Receiver)
+            .OrderByDescending(m => m.SendAt)
+            .Take(200)
+            .ToListAsync();
+
+        MessageSearchResultsList.Items.Clear();
+        foreach (var message in results)
+        {
+            string line = message.Receiver != null
+                ? $"{message.Sender.Username} -> {message.Receiver.Username}: {message.Text}"
+                : $"{message.Sender.Username}: {message.Text}";
+
+            MessageSearchResultsList.Items.Add(new TextBlock
+            {
+                Text = line,
+                Foreground = Avalonia.Media.Brushes.White,
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                Margin = new Avalonia.Thickness(0, 2)
+            });
         }
     }
 
@@ -411,6 +499,13 @@ public partial class MainWindow : Window
             Contact? contact = await context.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
             if (contact != null)
             {
+                IList<Message> messages = await context.Messages
+                    .Where(m =>
+                        (m.SenderId == _currentUserId && m.ReceiverId == contact.ContactUserId) ||
+                        (m.SenderId == contact.ContactUserId && m.ReceiverId == _currentUserId))
+                    .ToListAsync();
+
+                context.Messages.RemoveRange(messages);
                 context.Contacts.Remove(contact);
                 await context.SaveChangesAsync();
             }
@@ -587,6 +682,19 @@ public partial class MainWindow : Window
         });
     }
 
+    private void OnUserStatusReceived(string username, string status)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (username != _activeChat) return;
+
+            string text = status == "online"
+                ? $"{username} entered the chat"
+                : $"{username} left the chat";
+            MessagesList.Items.Add(text);
+        });
+    }
+
     private void OnGroupMessageReceived(string from, string groupName, string text)
     {
         Dispatcher.UIThread.Post(() =>
@@ -618,6 +726,11 @@ public partial class MainWindow : Window
     {
         SetViewMode(ChatViewMode.Groups);
         _ = LoadGroupsAsync();
+    }
+
+    private void SearchNavigationButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SetViewMode(ChatViewMode.Search);
     }
 
     private void AddContactBlackListButton_OnClick(object? sender, RoutedEventArgs e)
@@ -670,6 +783,15 @@ public partial class MainWindow : Window
         }
 
         await context.SaveChangesAsync();
+
+        if (!_activeChatIsGroup &&
+            (_activeChat == userForBlock.Username ||
+             (contactLink != null && contactLink.DisplayName == _activeChat)))
+        {
+            _activeChat = null;
+            ChatPanel.IsVisible = false;
+        }
+
         _blockedContactIds.Clear();
         await GetBlacklistedContacts();
         await GetAllContacts();

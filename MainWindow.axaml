@@ -226,11 +226,27 @@
                              IsEnabled="False"
                              Width="80"
                              Height="32"
+Background="#777777"
+                             Foreground="White"
+                             CornerRadius="8"/>
+
+                         <Button
+                             Grid.Column="1"
+                             Grid.Row="3"
+                             HorizontalAlignment="Left"
+                             VerticalAlignment="Top"
+                             x:Name="SearchNavigationButton"
+                             Click="SearchNavigationButton_OnClick"
+                             Content="Search"
+                             IsVisible="False"
+                             IsEnabled="False"
+                             Width="80"
+                             Height="32"
                              Background="#777777"
                              Foreground="White"
                              CornerRadius="8"/>
-                 
-                 
+                  
+                  
 <Border Grid.Column="0" Grid.Row="4"  BorderBrush="Gray"
                         x:Name="ContactsBorder"
                         Margin=" 0 30 0 0"
@@ -246,8 +262,18 @@
     <StackPanel x:Name="Contacts"
                 ScrollViewer.VerticalScrollBarVisibility="Auto">
         <StackPanel x:Name="ContactsModePanel">
+            <TextBox x:Name="ContactSearchTextBox"
+                     Height="30"
+                     PlaceholderText="search contact"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"
+                     TextChanged="ContactSearchTextBox_TextChanged"/>
             <TextBox x:Name="NewContactTextBox"
                      Height="30"
+                     Margin="0,4,0,0"
                      PlaceholderText="username"
                      Background="#777777"
                      Foreground="White"
@@ -328,18 +354,52 @@
            
             <StackPanel x:Name="GroupsList"/>
         </StackPanel>
+
+        <StackPanel x:Name="SearchModePanel"
+                    IsVisible="False">
+            <TextBlock Text="Message search"
+                       Foreground="White"
+                       Margin="0,0,0,8"/>
+            <TextBox x:Name="SearchUserTextBox"
+                     Height="30"
+                     PlaceholderText="username (optional)"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <TextBox x:Name="SearchMessagesTextBox"
+                     Height="30"
+                     Margin="0,4,0,0"
+                     PlaceholderText="message text"
+                     Background="#777777"
+                     Foreground="White"
+                     BorderThickness="0"
+                     CornerRadius="8"
+                     Padding="8"/>
+            <Button x:Name="SearchMessagesButton"
+                    Content="search messages"
+                    Height="30"
+                    Margin="0,4,0,8"
+                    Background="#777777"
+                    Foreground="White"
+                    CornerRadius="8"
+                    Click="SearchMessagesButton_Click"/>
+            <ListBox x:Name="MessageSearchResultsList"
+                     Background="Transparent"/>
+        </StackPanel>
     </StackPanel>
                 </Border>
 
                 <Border Grid.Column="1"
                         Grid.ColumnSpan="4"
-                        Grid.Row="3"
-                           Grid.RowSpan="5"
+                        Grid.Row="6"
+                           Grid.RowSpan="6"
                         x:Name="ChatPanel"
                         Margin="35,30,0,0"
                         BorderBrush="Gray"
                         BorderThickness="1"
-                        Height="340"
+                        Height="300"
                         CornerRadius="8"
                         IsVisible="False"
                         Padding="10">
